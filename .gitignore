@@ -1,0 +1,11 @@
+bin
+build
+lib
+.project
+.cproject
+.settings
+cmake_install.cmake
+CMakeFiles
+CMakeCache.txt
+**/Makefile
+*~

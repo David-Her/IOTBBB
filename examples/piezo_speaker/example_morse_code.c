@@ -3,9 +3,9 @@
 #include "ip_connection.h"
 #include "bricklet_piezo_speaker.h"
 
-#define HOST "localhost"
+#define HOST "192.168.178.52"
 #define PORT 4223
-#define UID "XYZ" // Change XYZ to the UID of your Piezo Speaker Bricklet
+#define UID "C84" // Change XYZ to the UID of your Piezo Speaker Bricklet
 
 int main(void) {
 	// Create IP connection
@@ -24,7 +24,8 @@ int main(void) {
 	// Don't use device before ipcon is connected
 
 	// Morse SOS with a frequency of 2kHz
-	piezo_speaker_morse_code(&ps, "... --- ...", 2000);
+	// piezo_speaker_morse_code(&ps, "... --- ...", 2000);
+  	piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
 
 	printf("Press key to exit\n");
 	getchar();

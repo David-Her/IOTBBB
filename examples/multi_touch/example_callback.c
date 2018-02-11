@@ -3,9 +3,9 @@
 #include "ip_connection.h"
 #include "bricklet_multi_touch.h"
 
-#define HOST "localhost"
+#define HOST "192.168.178.52"
 #define PORT 4223
-#define UID "XYZ" // Change XYZ to the UID of your Multi Touch Bricklet
+#define UID "zCq" // Change XYZ to the UID of your Multi Touch Bricklet
 
 // Callback function for touch state callback
 void cb_touch_state(uint16_t state, void *user_data) {

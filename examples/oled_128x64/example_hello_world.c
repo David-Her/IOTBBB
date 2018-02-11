@@ -3,9 +3,9 @@
 #include "ip_connection.h"
 #include "bricklet_oled_128x64.h"
 
-#define HOST "localhost"
+#define HOST "192.168.178.52"
 #define PORT 4223
-#define UID "XYZ" // Change XYZ to the UID of your OLED 128x64 Bricklet
+#define UID "Bj4" // Change XYZ to the UID of your OLED 128x64 Bricklet
 
 int main(void) {
 	// Create IP connection

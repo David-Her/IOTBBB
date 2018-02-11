@@ -1,1 +1,3 @@
 ADD_SUBDIRECTORY(piezo_speaker)
+ADD_SUBDIRECTORY(oled_128x64)
+ADD_SUBDIRECTORY(multi_touch)

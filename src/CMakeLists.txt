@@ -8,6 +8,8 @@ SET (bricks_files
 	ip_connection.cpp
 	bricklet_oled_128x64.c
 	bricklet_multi_touch.c
+	bricklet_distance_us.cpp  
+	bricklet_industrial_quad_relay.cpp
 )
 
 INCLUDE_DIRECTORIES(${bricks_include_dirs}) 

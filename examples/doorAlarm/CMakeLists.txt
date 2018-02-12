@@ -1,4 +1,4 @@
-add_executable(doorAlarm  example_callback.c)
+add_executable(doorAlarm  doorAlarm.cpp)
 
 find_package(Threads REQUIRED)
 target_link_libraries(doorAlarm bricks pthread)

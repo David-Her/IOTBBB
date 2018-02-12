@@ -37,10 +37,14 @@ int main(void) {
         	fprintf(stderr, "Could not get distance value, probably timeout\n");
         	return 1;
     	}
-
+    
     	printf("Distance Value: %u\n", distance);
+	    
+	if(distance < 500 ){
+		piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
+	}
 
-	sleep(1);
+	    sleep(1);
     }
 
 

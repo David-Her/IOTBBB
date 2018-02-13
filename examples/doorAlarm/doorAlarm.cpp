@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
+#include <sstream>
 
 #include "ip_connection.h"
 #include "bricklet_distance_us.h"
@@ -20,6 +21,7 @@
  OLED128x64 oled;
  PiezoSpeaker ps;
  MultiTouch mt;
+
  bool presed = false;
  uint16_t key = 0;
 
@@ -56,23 +58,27 @@ bool  enterPasword(){
 	// Write "Hello World" starting from upper left corner of the screen
 	oled_128x64_write_line(&oled, 0, 0, "The door have been open!");
         piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
-	oled_128x64_write_line(&oled, 5, 5, "Please insert the password");
+	oled_128x64_write_line(&oled, 5, 0, "Please insert the password");
 
 	multi_touch_register_callback(&mt,
 	                              MULTI_TOUCH_CALLBACK_TOUCH_STATE,
 	                              (void *)cb_touch_state,
 	                              NULL);
 	for(int k = 0; k<4; k++){
-		while(!presed){
-			oled_128x64_write_line(&oled, 5, 5, "Please insert the password");
-		}
 		oled_128x64_clear_display(&oled);
-		oled_128x64_write_line(&oled, 5, 5, "Keyword =  ");
-		std::string a = (char)key;
-		oled_128x64_write_line(&oled, 5, 5, a);
+		while(!presed){
+			oled_128x64_write_line(&oled, 5, 5, " waiting ...");
+			usleep(500);
+		}
+		presed = false;
+		oled_128x64_clear_display(&oled);
+		oled_128x64_write_line(&oled, 8, 5, "Keyword =  ");
+		std::stringstream ss;
+		ss << key;
+		std::string a = ss.str();
+		oled_128x64_write_line(&oled, 11, 5, (char*) a.c_str());
 		sleep(1);
 	}
-
 
 return false;
 }
@@ -90,7 +96,7 @@ int main(void) {
 
     oled_128x64_create(&oled, UID_OLED, &ipcon);
 
-    multi_touch_create&mt, UID_KEYPAD, &ipcon);
+    multi_touch_create(&mt, UID_KEYPAD, &ipcon);
 
     // Connect to brickd
     if(ipcon_connect(&ipcon, HOST, PORT) < 0) {

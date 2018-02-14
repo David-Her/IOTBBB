@@ -47,13 +47,12 @@ void cb_touch_state(uint16_t state, void *user_data) {
 				printf("%d ", i);
 				presed = true;
 				key = i;
-					
 			}
 		}
 		printf("touched\n");
-		
+
 		// Fill the pass vector
-		if((int)pass.size()>4){
+		if((int)pass.size()>3){
 			pass.erase(pass.begin());
 		}
 		pass.push_back(key);
@@ -62,35 +61,40 @@ void cb_touch_state(uint16_t state, void *user_data) {
 }
 
 bool  enterPasword(){
-	
+
 	std::cout << "In enterPassword \n ";
 
-	oled_128x64_write_line(&oled, 5, 3, "Insert password:");
+	oled_128x64_write_line(&oled, 3, 3, "Insert password:");
 	std::stringstream ss;
+	std::cout << "pass";
 	for(int i = 0; i < (int)pass.size(); i++){
 		ss << pass[i] << " ";
+		std::cout << "["<<  i << "]: " << pass[i] << " ";
 	}
-	std::string a;	
+	std::cout << std::endl;
+	std::string a;
 	a = ss.str();
-	oled_128x64_write_line(&oled, 11, 5, (char*) a.c_str());
-	
-	if((int)pass.size() == 4){
-		std::cout << "password correct! \n";
-		return true;
+	oled_128x64_write_line(&oled, 5, 3, (char*) a.c_str());
+	if((int)pass.size() > 3 ){
+		if(pass[0] == 1 && pass[1] == 4 && pass[2] == 1 && pass[3] == 8){
+			std::cout << "password correct! \n";
+			pass.clear(); //[0] = 0 && pass[1] == 4 && pass[2] == 1 && pass[3] == 8
+			return true;
+		}
 	}
-
 return false;
 }
 
 int main(void) {
 
+/*
  time_t now2 = time(NULL);
  char date[80];
 // strftime(date, 80, "%Y-%m-%d_%H-%M-%S", localtime(&now2));
  strftime(date, 80, "%H:%M:%S", localtime(&now2));
  std::cout <<"TIME => " <<  date << '\n';
  std::string date1 = date;
-
+*/
     // Create IP connection
     IPConnection ipcon;
     ipcon_create(&ipcon);
@@ -119,20 +123,47 @@ int main(void) {
     oled_128x64_write_line(&oled, 0, 3, " Hello David and Anna! ");
     oled_128x64_write_line(&oled, 3, 3, "Init. the system ...");
 
+    multi_touch_recalibrate(&mt);
+
+    /// 4095 => 0111111111111. 1-11=> ON, 12=> OFF
+    multi_touch_set_electrode_config(&mt, 4094);
+
 	multi_touch_register_callback(&mt,
 	                              MULTI_TOUCH_CALLBACK_TOUCH_STATE,
 	                              (void *)cb_touch_state,
 	                              NULL);
 
    sleep(1);
-
+   oled_128x64_clear_display(&oled);
     while(true){
     	// Get current distance value
     	uint16_t distance;
     	if(distance_us_get_distance_value(&dus, &distance) < 0) {
         	fprintf(stderr, "Could not get distance value, probably timeout\n");
+		oled_128x64_clear_display(&oled);
+		oled_128x64_write_line(&oled, 3, 1, "No Distance.! Timeout");
         	return 1;
-    	}
+    	}else{
+//		oled_128x64_clear_display(&oled);
+                oled_128x64_write_line(&oled, 0, 1, " Alarm: Ok");
+		std::stringstream ss;
+		ss << distance;
+		std::string a;
+        	a = ss.str();
+		oled_128x64_write_line(&oled, 3, 1, " Dist:");
+		oled_128x64_write_line(&oled, 3, 10, (char*) a.c_str());
+
+		oled_128x64_write_line(&oled, 6, 1, " Time: ");
+
+		 time_t now2 = time(NULL);
+		 char date[80];
+		// strftime(date, 80, "%Y-%m-%d_%H-%M-%S", localtime(&now2));
+		 strftime(date, 80, "%H:%M:%S", localtime(&now2));
+		 std::cout <<"TIME => " <<  date << '\n';
+		 std::string date1 = date;
+
+		oled_128x64_write_line(&oled, 6, 10, (char*) date1.c_str());
+	}
 
     	printf("Distance Value: %u\n", distance);
 
@@ -149,15 +180,20 @@ int main(void) {
 				oled_128x64_clear_display(&oled);
 				oled_128x64_write_line(&oled, 0, 0, " Password Correct! ");
 			}
-			usleep(500);
+			piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
+			usleep(500000);
 		}
 		
 		distance_us_get_distance_value(&dus, &distance);
     		printf("Distance Value: %u\n", distance);
 		while(distance < 501){
+			oled_128x64_clear_display(&oled);
+                                oled_128x64_write_line(&oled, 0, 1, "waiting to act. alarm! ");
+			distance_us_get_distance_value(&dus, &distance);
 			std::cout << "Waiting to close the door to activate the alarm \n ";
 			sleep(1);	
 		}
+	oled_128x64_clear_display(&oled);
 	}
 
 	    sleep(1);

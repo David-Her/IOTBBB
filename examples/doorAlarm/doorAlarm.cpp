@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
+#include <vector>
 
 #include "ip_connection.h"
 #include "bricklet_distance_us.h"
@@ -25,6 +26,8 @@
  bool presed = false;
  uint16_t key = 0;
 
+ std::vector<int> pass;
+
 // Callback function for touch state callback
 void cb_touch_state(uint16_t state, void *user_data) {
 	(void)user_data; // avoid unused parameter warning
@@ -44,46 +47,50 @@ void cb_touch_state(uint16_t state, void *user_data) {
 				printf("%d ", i);
 				presed = true;
 				key = i;
+					
 			}
 		}
 		printf("touched\n");
+		
+		// Fill the pass vector
+		if((int)pass.size()>4){
+			pass.erase(pass.begin());
+		}
+		pass.push_back(key);
+		std::cout << "pass: " << pass[0] << " " << pass[1] << " " << pass[2] << " " << pass[3] << std::endl;
 	}
 }
 
 bool  enterPasword(){
+	
+	std::cout << "In enterPassword \n ";
 
-// Clear display
-	oled_128x64_clear_display(&oled);
-
-	// Write "Hello World" starting from upper left corner of the screen
-	oled_128x64_write_line(&oled, 0, 0, "The door have been open!");
-        piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
-	oled_128x64_write_line(&oled, 5, 0, "Please insert the password");
-
-	multi_touch_register_callback(&mt,
-	                              MULTI_TOUCH_CALLBACK_TOUCH_STATE,
-	                              (void *)cb_touch_state,
-	                              NULL);
-	for(int k = 0; k<4; k++){
-		oled_128x64_clear_display(&oled);
-		while(!presed){
-			oled_128x64_write_line(&oled, 5, 5, " waiting ...");
-			usleep(500);
-		}
-		presed = false;
-		oled_128x64_clear_display(&oled);
-		oled_128x64_write_line(&oled, 8, 5, "Keyword =  ");
-		std::stringstream ss;
-		ss << key;
-		std::string a = ss.str();
-		oled_128x64_write_line(&oled, 11, 5, (char*) a.c_str());
-		sleep(1);
+	oled_128x64_write_line(&oled, 5, 3, "Insert password:");
+	std::stringstream ss;
+	for(int i = 0; i < (int)pass.size(); i++){
+		ss << pass[i] << " ";
+	}
+	std::string a;	
+	a = ss.str();
+	oled_128x64_write_line(&oled, 11, 5, (char*) a.c_str());
+	
+	if((int)pass.size() == 4){
+		std::cout << "password correct! \n";
+		return true;
 	}
 
 return false;
 }
 
 int main(void) {
+
+ time_t now2 = time(NULL);
+ char date[80];
+// strftime(date, 80, "%Y-%m-%d_%H-%M-%S", localtime(&now2));
+ strftime(date, 80, "%H:%M:%S", localtime(&now2));
+ std::cout <<"TIME => " <<  date << '\n';
+ std::string date1 = date;
+
     // Create IP connection
     IPConnection ipcon;
     ipcon_create(&ipcon);
@@ -109,8 +116,13 @@ int main(void) {
     oled_128x64_clear_display(&oled);
 
     // Write "Hello World" starting from upper left corner of the screen
-    oled_128x64_write_line(&oled, 0, 0, " Hello David and Anna! ");
-    oled_128x64_write_line(&oled, 3, 3, "Initializing the system ... ");
+    oled_128x64_write_line(&oled, 0, 3, " Hello David and Anna! ");
+    oled_128x64_write_line(&oled, 3, 3, "Init. the system ...");
+
+	multi_touch_register_callback(&mt,
+	                              MULTI_TOUCH_CALLBACK_TOUCH_STATE,
+	                              (void *)cb_touch_state,
+	                              NULL);
 
    sleep(1);
 
@@ -125,9 +137,26 @@ int main(void) {
     	printf("Distance Value: %u\n", distance);
 
 	if(distance < 500 ){
-		while(!enterPasword()){
-			oled_128x64_write_line(&oled, 0, 0, " Password Correct! ");
-			sleep(120);
+		// Clear display
+		oled_128x64_clear_display(&oled);
+		// Write "Hello World" starting from upper left corner of the screen
+		oled_128x64_write_line(&oled, 0, 3, "The door have been open!");
+        	piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
+		bool pasword = false;
+		while(!pasword){
+			pasword = enterPasword();
+			if(pasword){
+				oled_128x64_clear_display(&oled);
+				oled_128x64_write_line(&oled, 0, 0, " Password Correct! ");
+			}
+			usleep(500);
+		}
+		
+		distance_us_get_distance_value(&dus, &distance);
+    		printf("Distance Value: %u\n", distance);
+		while(distance < 501){
+			std::cout << "Waiting to close the door to activate the alarm \n ";
+			sleep(1);	
 		}
 	}
 

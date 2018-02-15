@@ -3,6 +3,12 @@
 #include <unistd.h>
 #include <sstream>
 #include <vector>
+#include <time.h>
+
+#include <curl/curl.h>
+#include <jsoncpp/json/value.h>
+#include <jsoncpp/json/json.h>
+#include <jsoncpp/json/forwards.h>
 
 #include "ip_connection.h"
 #include "bricklet_distance_us.h"
@@ -28,6 +34,8 @@
 
  std::vector<int> pass;
 
+ time_t start;
+
 // Callback function for touch state callback
 void cb_touch_state(uint16_t state, void *user_data) {
 	(void)user_data; // avoid unused parameter warning
@@ -46,7 +54,20 @@ void cb_touch_state(uint16_t state, void *user_data) {
 			if(state & (1 << i)) {
 				printf("%d ", i);
 				presed = true;
-				key = i;
+				if(i == 0){key = 3;}
+				else if(i == 1){key = 2;}
+				else if(i == 2){key = 1;}
+				else if(i == 3){key = 6;}
+				else if(i == 4){key = 5;}
+				else if(i == 5){key = 4;}
+				else if(i == 6){key = 9;}
+				else if(i == 7){key = 8;}
+				else if(i == 8){key = 7;}
+				else if(i == 9){key = 12;}
+				else if(i == 10){key = 11;}
+				else if(i == 11){key = 10;}
+				else{}
+				//key = i;
 			}
 		}
 		printf("touched\n");
@@ -60,12 +81,80 @@ void cb_touch_state(uint16_t state, void *user_data) {
 	}
 }
 
+bool sendSMS(){
+	bool responseBool = false;
+	std::cout << "Sending SMS";
+	CURLcode ret; CURL *hnd;
+		struct curl_slist *slist1;
+		time_t now = time(NULL);
+		char date[80];
+		strftime(date, 80, "%Y-%m-%d_%H-%M-%S", localtime(&now));
+		strftime(date, 80, "UTC", localtime(&now));
+		std::string date1 = date;
+		std::stringstream ss2;
+		ss2 << now;
+		srand (time(NULL));
+		std::string ss;
+		ss = "<stream>\n<protocol>v1</protocol>\n<at>now</at>\n<device>distanceSensor@davidnike18.davidnike18</device>\n<data>\n";
+		ss = ss + "<action>sms</action>\n<value>9191</value>\n<from>bbb</from>\n</data>\n</stream>\n";
+		std::cout << "\n\n\n ######## payload ######  \n" << ss.c_str()  << "#################### \n\n\n";
+		slist1 = NULL;
+		slist1 = curl_slist_append(slist1, "carriots.apikey:996367ee330a4ed903e2253780215dba3e72d24556bcc9917dcb6960da207441");
+		slist1 = curl_slist_append(slist1, "content-type:application/xml");
+		hnd = curl_easy_init();
+		curl_easy_setopt(hnd, CURLOPT_URL, "http://api.carriots.com/streams");
+		curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, ss.c_str());
+		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "POST");
+		ret = curl_easy_perform(hnd);
+		// Response
+		int http_code;
+		curl_easy_getinfo(hnd, CURLINFO_RESPONSE_CODE, &http_code);
+		std::cout << "\n http_code = " << http_code << " \n "; // << str(curl_easy_strerror(ret));
+		if (http_code == 200){ 
+			std::cout << "Response OK\n"; 
+			responseBool = true;
+		}else{ 
+			std::cout << "Response Fail\n";
+			responseBool = false;
+		}
+		curl_easy_cleanup(hnd);
+		hnd = NULL;
+		curl_slist_free_all(slist1);
+		slist1 = NULL;
+		sleep(10);
+
+	return responseBool;
+
+}
+
 bool  enterPasword(){
+
+	std::stringstream ss;
 
 	std::cout << "In enterPassword \n ";
 
 	oled_128x64_write_line(&oled, 3, 3, "Insert password:");
-	std::stringstream ss;
+
+	double seconds_since_start = 60 - difftime( time(0), start);
+	ss << seconds_since_start;
+	std::string b;
+	b = ss.str();
+	oled_128x64_write_line(&oled, 4, 3, (char*) b.c_str());	
+	std::cout << "Time left: " << seconds_since_start;
+
+	if(seconds_since_start < 0){
+		oled_128x64_clear_display(&oled);
+		oled_128x64_write_line(&oled, 0, 0, "Send SMS");
+		if(sendSMS()){
+			oled_128x64_write_line(&oled, 0, 3, "===>");
+		}else{
+			oled_128x64_write_line(&oled, 0, 3, " No sent :-(");
+		}
+	}	
+
+	// Clear stringstream
+	ss.str(std::string());	
 	std::cout << "pass";
 	for(int i = 0; i < (int)pass.size(); i++){
 		ss << pass[i] << " ";
@@ -86,6 +175,10 @@ return false;
 }
 
 int main(void) {
+
+// To test send a SMS (5 per day / one per minute.)
+//	sendSMS();
+//	return 0;
 
 /*
  time_t now2 = time(NULL);
@@ -133,7 +226,7 @@ int main(void) {
 	                              (void *)cb_touch_state,
 	                              NULL);
 
-   sleep(1);
+	sleep(1);
    oled_128x64_clear_display(&oled);
     while(true){
     	// Get current distance value
@@ -155,7 +248,8 @@ int main(void) {
 
 		oled_128x64_write_line(&oled, 6, 1, " Time: ");
 
-		 time_t now2 = time(NULL);
+		// Adding one hour (1*60*60) to the UTC time
+		 time_t now2 = time(NULL) + (60*60);
 		 char date[80];
 		// strftime(date, 80, "%Y-%m-%d_%H-%M-%S", localtime(&now2));
 		 strftime(date, 80, "%H:%M:%S", localtime(&now2));
@@ -167,11 +261,13 @@ int main(void) {
 
     	printf("Distance Value: %u\n", distance);
 
-	if(distance < 500 ){
+	if((distance < 800) || (distance > 1200)){
 		// Clear display
 		oled_128x64_clear_display(&oled);
 		// Write "Hello World" starting from upper left corner of the screen
 		oled_128x64_write_line(&oled, 0, 3, "The door have been open!");
+		// Start timer
+		start = time(0);
         	piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
 		bool pasword = false;
 		while(!pasword){
@@ -186,7 +282,7 @@ int main(void) {
 		
 		distance_us_get_distance_value(&dus, &distance);
     		printf("Distance Value: %u\n", distance);
-		while(distance < 501){
+		while(!((distance > 800) && (distance < 1200))){
 			oled_128x64_clear_display(&oled);
                                 oled_128x64_write_line(&oled, 0, 1, "waiting to act. alarm! ");
 			distance_us_get_distance_value(&dus, &distance);

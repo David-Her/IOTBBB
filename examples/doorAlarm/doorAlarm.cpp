@@ -122,7 +122,7 @@ bool sendSMS(){
 		hnd = NULL;
 		curl_slist_free_all(slist1);
 		slist1 = NULL;
-		sleep(10);
+		sleep(1);
 
 	return responseBool;
 
@@ -136,22 +136,23 @@ bool  enterPasword(){
 
 	oled_128x64_write_line(&oled, 3, 3, "Insert password:");
 
-	double seconds_since_start = 60 - difftime( time(0), start);
+	double seconds_since_start = 30 - difftime( time(0), start);
 	ss << seconds_since_start;
 	std::string b;
 	b = ss.str();
-	oled_128x64_write_line(&oled, 4, 3, (char*) b.c_str());	
+	oled_128x64_write_line(&oled, 4, 15, (char*) b.c_str());
 	std::cout << "Time left: " << seconds_since_start;
 
 	if(seconds_since_start < 0){
 		oled_128x64_clear_display(&oled);
 		oled_128x64_write_line(&oled, 0, 0, "Send SMS");
 		if(sendSMS()){
-			oled_128x64_write_line(&oled, 0, 3, "===>");
+			oled_128x64_write_line(&oled, 3, 3, "===>");
+			return true;
 		}else{
 			oled_128x64_write_line(&oled, 0, 3, " No sent :-(");
 		}
-	}	
+	}
 
 	// Clear stringstream
 	ss.str(std::string());	
@@ -279,7 +280,7 @@ int main(void) {
 			piezo_speaker_morse_code(&ps, ". - . - . -", 2000);
 			usleep(500000);
 		}
-		
+
 		distance_us_get_distance_value(&dus, &distance);
     		printf("Distance Value: %u\n", distance);
 		while(!((distance > 800) && (distance < 1200))){
@@ -287,7 +288,7 @@ int main(void) {
                                 oled_128x64_write_line(&oled, 0, 1, "waiting to act. alarm! ");
 			distance_us_get_distance_value(&dus, &distance);
 			std::cout << "Waiting to close the door to activate the alarm \n ";
-			sleep(1);	
+			sleep(1);
 		}
 	oled_128x64_clear_display(&oled);
 	}

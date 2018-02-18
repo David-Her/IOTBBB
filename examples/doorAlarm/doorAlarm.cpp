@@ -5,6 +5,9 @@
 #include <vector>
 #include <time.h>
 
+// To reboot the BB
+#include <linux/reboot.h>
+
 #include <curl/curl.h>
 #include <jsoncpp/json/value.h>
 #include <jsoncpp/json/json.h>
@@ -236,6 +239,9 @@ int main(void) {
         	fprintf(stderr, "Could not get distance value, probably timeout\n");
 		oled_128x64_clear_display(&oled);
 		oled_128x64_write_line(&oled, 3, 1, "No Distance.! Timeout");
+		oled_128x64_write_line(&oled, 4, 1, "Rebooting ...");
+		// Reboot BB in case of no response from the distance sensor
+		reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_POWER_OFF, 0);
         	return 1;
     	}else{
 //		oled_128x64_clear_display(&oled);

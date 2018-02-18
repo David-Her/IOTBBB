@@ -7,6 +7,7 @@
 
 // To reboot the BB
 #include <linux/reboot.h>
+#include <sys/reboot.h>
 
 #include <curl/curl.h>
 #include <jsoncpp/json/value.h>
@@ -83,6 +84,104 @@ void cb_touch_state(uint16_t state, void *user_data) {
 		std::cout << "pass: " << pass[0] << " " << pass[1] << " " << pass[2] << " " << pass[3] << std::endl;
 	}
 }
+//
+bool sendSMSReboot(){
+	bool responseBool = false;
+	std::cout << "Sending SMS";
+	CURLcode ret; CURL *hnd;
+		struct curl_slist *slist1;
+		time_t now = time(NULL);
+		char date[80];
+		strftime(date, 80, "%Y-%m-%d_%H-%M-%S", localtime(&now));
+		strftime(date, 80, "UTC", localtime(&now));
+		std::string date1 = date;
+		std::stringstream ss2;
+		ss2 << now;
+		srand (time(NULL));
+		std::string ss;
+		ss = "<stream>\n<protocol>v1</protocol>\n<at>now</at>\n<device>distanceSensor@davidnike18.davidnike18</device>\n<data>\n";
+		ss = ss + "<action>sms</action>\n<value>5555</value>\n<from>bbb</from>\n</data>\n</stream>\n";
+		std::cout << "\n\n\n ######## payload ######  \n" << ss.c_str()  << "#################### \n\n\n";
+		slist1 = NULL;
+		slist1 = curl_slist_append(slist1, "carriots.apikey:996367ee330a4ed903e2253780215dba3e72d24556bcc9917dcb6960da207441");
+		slist1 = curl_slist_append(slist1, "content-type:application/xml");
+		hnd = curl_easy_init();
+		curl_easy_setopt(hnd, CURLOPT_URL, "http://api.carriots.com/streams");
+		curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, ss.c_str());
+		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "POST");
+		ret = curl_easy_perform(hnd);
+		// Response
+		int http_code;
+		curl_easy_getinfo(hnd, CURLINFO_RESPONSE_CODE, &http_code);
+		std::cout << "\n http_code = " << http_code << " \n "; // << str(curl_easy_strerror(ret));
+		if (http_code == 200){ 
+			std::cout << "Response OK\n"; 
+			responseBool = true;
+		}else{ 
+			std::cout << "Response Fail\n";
+			responseBool = false;
+		}
+		curl_easy_cleanup(hnd);
+		hnd = NULL;
+		curl_slist_free_all(slist1);
+		slist1 = NULL;
+		sleep(1);
+
+	return responseBool;
+
+}
+//
+
+///////////////////////////////////////////////////
+bool sendSMSFailure(){
+	bool responseBool = false;
+	std::cout << "Sending SMS";
+	CURLcode ret; CURL *hnd;
+		struct curl_slist *slist1;
+		time_t now = time(NULL);
+		char date[80];
+		strftime(date, 80, "%Y-%m-%d_%H-%M-%S", localtime(&now));
+		strftime(date, 80, "UTC", localtime(&now));
+		std::string date1 = date;
+		std::stringstream ss2;
+		ss2 << now;
+		srand (time(NULL));
+		std::string ss;
+		ss = "<stream>\n<protocol>v1</protocol>\n<at>now</at>\n<device>distanceSensor@davidnike18.davidnike18</device>\n<data>\n";
+		ss = ss + "<action>sms</action>\n<value>3333</value>\n<from>bbb</from>\n</data>\n</stream>\n";
+		std::cout << "\n\n\n ######## payload ######  \n" << ss.c_str()  << "#################### \n\n\n";
+		slist1 = NULL;
+		slist1 = curl_slist_append(slist1, "carriots.apikey:996367ee330a4ed903e2253780215dba3e72d24556bcc9917dcb6960da207441");
+		slist1 = curl_slist_append(slist1, "content-type:application/xml");
+		hnd = curl_easy_init();
+		curl_easy_setopt(hnd, CURLOPT_URL, "http://api.carriots.com/streams");
+		curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, ss.c_str());
+		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "POST");
+		ret = curl_easy_perform(hnd);
+		// Response
+		int http_code;
+		curl_easy_getinfo(hnd, CURLINFO_RESPONSE_CODE, &http_code);
+		std::cout << "\n http_code = " << http_code << " \n "; // << str(curl_easy_strerror(ret));
+		if (http_code == 200){ 
+			std::cout << "Response OK\n"; 
+			responseBool = true;
+		}else{ 
+			std::cout << "Response Fail\n";
+			responseBool = false;
+		}
+		curl_easy_cleanup(hnd);
+		hnd = NULL;
+		curl_slist_free_all(slist1);
+		slist1 = NULL;
+		sleep(1);
+
+	return responseBool;
+
+}
+///////////////////////////////////////////////////
+
 
 bool sendSMS(){
 	bool responseBool = false;
@@ -209,6 +308,9 @@ int main(void) {
     // Connect to brickd
     if(ipcon_connect(&ipcon, HOST, PORT) < 0) {
         fprintf(stderr, "Could not connect\n");
+	sendSMSFailure();
+	sync();
+	reboot(LINUX_REBOOT_CMD_RESTART);
         return 1;
     }
     // Don't use device before ipcon is connected
@@ -241,7 +343,10 @@ int main(void) {
 		oled_128x64_write_line(&oled, 3, 1, "No Distance.! Timeout");
 		oled_128x64_write_line(&oled, 4, 1, "Rebooting ...");
 		// Reboot BB in case of no response from the distance sensor
-		reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_POWER_OFF, 0);
+		sendSMSReboot();
+		sync();
+//		reboot(LINUX_REBOOT_CMD_POWER_OFF);
+		reboot(LINUX_REBOOT_CMD_RESTART);
         	return 1;
     	}else{
 //		oled_128x64_clear_display(&oled);

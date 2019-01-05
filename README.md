@@ -12,10 +12,9 @@ https://stackoverflow.com/questions/28854705/executing-a-script-on-startup-using
   cd /usr/bin/
   Type: nano scriptname.sh
 
-----
 #!/bin/bash
 /home/root/name_of_compiled_code
-----
+
 
 Save and grant execute permission
 
@@ -27,7 +26,6 @@ Save and grant execute permission
 
 4. Edit the above file as necessary to invoke the different functionalities like network. Enable these only if the code needs that particular service. Disable unwanted ones to decrease boot time.
 
-----
 [Unit]
 Description=description of code
 After=syslog.target network.target
@@ -36,7 +34,6 @@ Type=simple
 ExecStart=/usr/bin/scriptname.sh
 [Install]
 WantedBy=multi-user.target
----
 
 5. Create a symbolic link to let the device know the location of the service.
 

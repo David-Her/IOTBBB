@@ -4,7 +4,7 @@
 
 #define IPCON_EXPOSE_MILLISLEEP
 
-#include "stdafx.h"
+//#include "stdafx.h"
 #include <iostream>
 #include <stdio.h>
 #include "ip_connection.h"

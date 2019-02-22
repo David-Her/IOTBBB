@@ -3,11 +3,11 @@ SET(bricks_include_dirs
 )
 
 SET (bricks_files
-	bricklet_piezo_speaker.c
+	bricklet_piezo_speaker.cpp
 	brick_master.cpp
 	ip_connection.cpp
-	bricklet_oled_128x64.c
-	bricklet_multi_touch.c
+	bricklet_oled_128x64.cpp
+	bricklet_multi_touch.cpp
 	bricklet_distance_us.cpp  
 	bricklet_industrial_quad_relay.cpp
 )

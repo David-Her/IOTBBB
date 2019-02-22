@@ -44,7 +44,7 @@ int main()
 
 	/*********************************************************************************************************/
 
-	bool led_on = FALSE;
+	bool led_on = false;
 
 	while (true) {
 		// Get current distance value
